@@ -10,7 +10,7 @@ type Todo {
     isDone: Boolean!
     priority: Int!
     taskName: String!
-    user: User!
+    user: UserNoPass!
     tag: Tag!
 }
 type User {
@@ -19,23 +19,36 @@ type User {
     password: String!
     todo: [Todo]!
 }
-type JWT {
-    user: User!
-    jwt: String!
+type UserNoPass {
+    id: ID!
+    username: String!
+    todo: [Todo]!
+}
+type myResponse {
+    success: Boolean!
+    code: String!
+    message: String!
+    tag: Tag
+    tags: [Tag]
+    todo: Todo
+    todos: [Todo]
+    user: UserNoPass
+    users: [UserNoPass]
+    JWT: String
 }
 type Query {
-    tag: [Tag]
-    todos: [Todo]
-    users: [User]
+    tag: myResponse
+    todos: myResponse
+    users: myResponse
     
 }
 type Mutation {
-    addTodo(description: String!, priority: Int!, taskName: String!, tagId: String!, jwt: String!): Todo
-    newUser(username: String!, password: String!): User
-    addTag(name: String!): Tag
-    loginUser(username: String!, password: String!): JWT!
-    updateTodo(id: ID!, description: String, isDone: Boolean, priority: Int, taskName: String, tagId: String, jwt: String!): Todo
-    userDoneTodo(jwt: String!): [Todo]!
-    updateStatus(todoId: String!, isDone: Boolean!, jwt: String!): Todo
+    addTodo(description: String!, priority: Int!, taskName: String!, tagId: String!, jwt: String!): myResponse
+    newUser(username: String!, password: String!): myResponse
+    addTag(name: String!): myResponse
+    loginUser(username: String!, password: String!): myResponse
+    updateTodo(id: ID!, description: String, isDone: Boolean, priority: Int, taskName: String, tagId: String, jwt: String!): myResponse
+    userDoneTodo(jwt: String!): myResponse
+    updateStatus(todoId: String!, isDone: Boolean!, jwt: String!): myResponse
 }
 `;

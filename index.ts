@@ -19,29 +19,65 @@ app.use(
 
 const resolvers = {
   Query: {
-    users: async () =>
-      await prisma.user.findMany({
+    users: async () => {
+      const users = await prisma.user.findMany({
         include: { todo: true },
         omit: { password: true },
-      }),
-    todos: async () => await prisma.todo.findMany({ include: { user: true } }),
-    tag: async () => await prisma.tag.findMany(),
+      });
+      return {
+        success: true,
+        message: "Хүсэлт амжилттай!",
+        code: "REQUEST_SUCCESS",
+        users,
+      };
+    },
+    todos: async () => {
+      const todos = await prisma.todo.findMany({ include: { user: true } });
+      return {
+        success: true,
+        message: "Хүсэлт амжилттай!",
+        code: "REQUEST_SUCCESS",
+        todos,
+      };
+    },
+    tag: async () => {
+      const tags = await prisma.tag.findMany();
+      return {
+        success: true,
+        message: "Хүсэлт амжилттай!",
+        code: "REQUEST_SUCCESS",
+        tags,
+      };
+    },
   },
   Mutation: {
     newUser: async (
       p: any,
       { username, password }: { username: string; password: string }
     ) => {
+      const useExist = await prisma.user.findUnique({ where: { username } });
+      if (useExist) {
+        throw new GraphQLError("Хэрэглэгч бүртгэлтэй байна!");
+      }
       const encryptedPass = await bcrypt.hash(password, 15);
-
       const newUser = await prisma.user.create({
         data: { username, password: encryptedPass },
       });
-      return newUser;
+      return {
+        success: true,
+        message: "Хүсэлт амжилттай!",
+        code: "REQUEST_SUCCESS",
+        user: newUser,
+      };
     },
     addTag: async (p: any, { name }: { name: string }) => {
       const newTag = await prisma.tag.create({ data: { name } });
-      return newTag;
+      return {
+        success: true,
+        message: "Хүсэлт амжилттай!",
+        code: "REQUEST_SUCCESS",
+        tag: newTag,
+      };
     },
     addTodo: async (
       p: any,
@@ -84,9 +120,14 @@ const resolvers = {
           },
           include: { user: true },
         });
-        console.log(newTodo);
-        if (newTodo) return newTodo;
-        else {
+        if (newTodo) {
+          return {
+            success: true,
+            message: "Хүсэлт амжилттай!",
+            code: "REQUEST_SUCCESS",
+            todo: newTodo,
+          };
+        } else {
           throw new GraphQLError("Алдаа гарлаа!");
         }
       } catch (err) {
@@ -119,8 +160,13 @@ const resolvers = {
         process.env.ACCESS_TOKEN,
         { expiresIn: "1h" }
       );
-      console.log({ user, jwt: accessToken });
-      return { user, jwt: accessToken };
+      return {
+        success: true,
+        message: "Хүсэлт амжилттай!",
+        code: "REQUEST_SUCCESS",
+        user,
+        JWT: accessToken,
+      };
     },
     updateTodo: async (
       p: any,
@@ -168,8 +214,12 @@ const resolvers = {
           },
           include: { user: true, tag: true },
         });
-
-        return updatedTodo;
+        return {
+          success: true,
+          message: "Хүсэлт амжилттай!",
+          code: "REQUEST_SUCCESS",
+          todo: updatedTodo,
+        };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
       }
@@ -195,8 +245,12 @@ const resolvers = {
           where: { userId: verify.id, isDone: true },
           include: { user: true, tag: true },
         });
-        console.log(todos);
-        return todos;
+        return {
+          success: true,
+          message: "Хүсэлт амжилттай!",
+          code: "REQUEST_SUCCESS",
+          todos,
+        };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
       }
@@ -239,8 +293,12 @@ const resolvers = {
           data: { isDone },
           include: { user: true, tag: true },
         });
-
-        return updatedTodo;
+        return {
+          success: true,
+          message: "Хүсэлт амжилттай!",
+          code: "REQUEST_SUCCESS",
+          todo: updatedTodo,
+        };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
       }
