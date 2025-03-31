@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model tag {
+  id   String @id @default(nanoid())
+  name String @unique
+  todo todo[]
+}
+
+model todo {
+  id          String   @id @default(nanoid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  description String
+  isDone      Boolean  @default(false)
+  priority    Int
+  taskName    String   @unique
+  userId      String
+  user        user     @relation(fields: [userId], references: [id])
+  tag       tag @relation(references: [id], fields: [tagId])
+  tagId     String
+}
+
+model user {
+  id       String @id @default(nanoid())
+  username String @unique
+  password String
+  todo     todo[]
+}
+
+enum Status {
+  TODO
+  INPROGRESS
+  DONE
+  BLOCKED
+}
