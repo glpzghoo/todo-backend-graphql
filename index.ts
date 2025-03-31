@@ -1,21 +1,10 @@
 import { ApolloServer } from "@apollo/server";
 import { GraphQLError } from "graphql";
-import express, { request } from "express";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { typeDefs } from "./lib/schema";
 import { prisma } from "./lib/prisma";
-const app = express();
-app.use(express.json());
-app.use(
-  cors({
-    origin: "https://studio.apollographql.com",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
 
 const resolvers = {
   Query: {
@@ -143,7 +132,10 @@ const resolvers = {
           "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
         );
       }
-      const user = await prisma.user.findUnique({ where: { username } });
+      const user = await prisma.user.findUnique({
+        where: { username },
+        include: { todo: true },
+      });
       if (!user) {
         throw new GraphQLError("Хэрэглэгч олдсонгүй!");
       }
