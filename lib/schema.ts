@@ -9,7 +9,9 @@ type Todo {
     description: String!
     isDone: Boolean!
     priority: Int!
+    cancelled: Boolean!
     taskName: String!
+    createdAt: String!
     user: UserNoPass!
     tag: Tag!
 }
@@ -48,8 +50,8 @@ type Mutation {
     loginUser(username: String!, password: String!): myResponse
     updateTodo(id: ID!, description: String, priority: Int, taskName: String, jwt: String!): myResponse
     userDoneTodo(jwt: String!): myResponse
-    updateStatus(todoId: String!, isDone: Boolean!, jwt: String!): myResponse
+    updateStatus(todoId: String!, jwt: String!): myResponse
     userTodo(jwt: String!): myResponse
-
+    cancelTodo(jwt: String!, id: String!): myResponse
 }
 `;

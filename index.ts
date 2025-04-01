@@ -107,7 +107,7 @@ const resolvers = {
             userId: user.id,
             tagId,
           },
-          include: { user: true },
+          include: { user: true, tag: true },
         });
         if (newTodo) {
           return {
@@ -249,11 +249,7 @@ const resolvers = {
     },
     updateStatus: async (
       p: any,
-      {
-        todoId,
-        isDone,
-        jwt: jwtfromuser,
-      }: { todoId: string; isDone: boolean; jwt: string }
+      { todoId, jwt: jwtfromuser }: { todoId: string; jwt: string }
     ) => {
       try {
         if (!process.env.ACCESS_TOKEN) {
@@ -273,16 +269,19 @@ const resolvers = {
 
         const todo = await prisma.todo.findUnique({ where: { id: todoId } });
         if (!todo) {
-          throw new GraphQLError("Todo олдсонгүй!");
+          throw new GraphQLError("Даалгавар олдсонгүй!");
+        }
+        if (todo.isDone === true) {
+          throw new GraphQLError("Даалгавар аль хэдий нь дууссан байна!");
         }
         const isValid = todo.userId === verify.id;
         if (!isValid) {
-          throw new GraphQLError("Todo өөрчлөх эрх байхгүй!");
+          throw new GraphQLError("Даалгавар өөрчлөх эрх байхгүй!");
         }
 
         const updatedTodo = await prisma.todo.update({
           where: { id: todo.id },
-          data: { isDone },
+          data: { isDone: true },
           include: { user: true, tag: true },
         });
         return {
@@ -314,7 +313,7 @@ const resolvers = {
         const todos = await prisma.todo.findMany({
           where: { userId: verify.id },
           include: { tag: true, user: true },
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ isDone: "asc" }, { createdAt: "desc" }],
         });
         return {
           success: true,
@@ -322,6 +321,47 @@ const resolvers = {
           code: "REQUEST_SUCCESS",
           todos,
           user,
+        };
+      } catch (err) {
+        throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
+      }
+    },
+    cancelTodo: async (
+      p: any,
+      { jwt: jwtfromuser, id }: { jwt: string; id: string }
+    ) => {
+      try {
+        if (!process.env.ACCESS_TOKEN) {
+          throw new GraphQLError(
+            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
+          );
+        }
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+          id: string;
+          username: string;
+        };
+
+        const user = await prisma.user.findUnique({ where: { id: verify.id } });
+        if (!user) {
+          throw new GraphQLError("Хэрэглэгч олдсонгүй!");
+        }
+
+        const todo = await prisma.todo.findUnique({ where: { id } });
+        if (!todo) {
+          throw new GraphQLError("Даалгавар олдсонгүй!");
+        }
+        if (todo.userId !== user.id) {
+          throw new GraphQLError("Таны даалгавар биш байна!");
+        }
+        const updateTodo = await prisma.todo.update({
+          where: { id: todo.id },
+          data: { cancelled: true },
+        });
+        return {
+          success: true,
+          message: "Хүсэлт амжилттай!",
+          code: "REQUEST_SUCCESS",
+          todo: updateTodo,
         };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
