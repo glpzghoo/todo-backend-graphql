@@ -40,7 +40,6 @@ type Query {
     tag: myResponse
     todos: myResponse
     users: myResponse
-    
 }
 type Mutation {
     addTodo(description: String!, priority: Int!, taskName: String!, tagId: String!, jwt: String!): myResponse
@@ -50,5 +49,7 @@ type Mutation {
     updateTodo(id: ID!, description: String, priority: Int, taskName: String, jwt: String!): myResponse
     userDoneTodo(jwt: String!): myResponse
     updateStatus(todoId: String!, isDone: Boolean!, jwt: String!): myResponse
+    userTodo(jwt: String!): myResponse
+
 }
 `;

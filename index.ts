@@ -134,7 +134,7 @@ const resolvers = {
       }
       const user = await prisma.user.findUnique({
         where: { username },
-        include: { todo: true },
+        include: { todo: { include: { tag: true } } },
       });
       if (!user) {
         throw new GraphQLError("Хэрэглэгч олдсонгүй!");
@@ -290,6 +290,38 @@ const resolvers = {
           message: "Хүсэлт амжилттай!",
           code: "REQUEST_SUCCESS",
           todo: updatedTodo,
+        };
+      } catch (err) {
+        throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
+      }
+    },
+    userTodo: async (p: any, { jwt: jwtfromuser }: { jwt: string }) => {
+      try {
+        if (!process.env.ACCESS_TOKEN) {
+          throw new GraphQLError(
+            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
+          );
+        }
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+          id: string;
+          username: string;
+        };
+
+        const user = await prisma.user.findUnique({ where: { id: verify.id } });
+        if (!user) {
+          throw new GraphQLError("Хэрэглэгч олдсонгүй!");
+        }
+        const todos = await prisma.todo.findMany({
+          where: { userId: verify.id },
+          include: { tag: true, user: true },
+          orderBy: { createdAt: "desc" },
+        });
+        return {
+          success: true,
+          message: "Хүсэлт амжилттай!",
+          code: "REQUEST_SUCCESS",
+          todos,
+          user,
         };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");

@@ -22,9 +22,9 @@ model todo {
   priority    Int
   taskName    String   @unique
   userId      String
+  tagId       String
+  tag         tag      @relation(fields: [tagId], references: [id])
   user        user     @relation(fields: [userId], references: [id])
-  tag       tag @relation(references: [id], fields: [tagId])
-  tagId     String
 }
 
 model user {
