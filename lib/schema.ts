@@ -48,7 +48,7 @@ type Mutation {
     newUser(username: String!, password: String!): myResponse
     addTag(name: String!): myResponse
     loginUser(username: String!, password: String!): myResponse
-    updateTodo(id: ID!, description: String, priority: Int, taskName: String, jwt: String!): myResponse
+    updateTodo(id: String!, description: String, priority: Int, taskName: String, jwt: String!, tagId: String): myResponse
     userDoneTodo(jwt: String!): myResponse
     updateStatus(todoId: String!, jwt: String!): myResponse
     userTodo(jwt: String!): myResponse

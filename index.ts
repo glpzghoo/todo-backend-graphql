@@ -167,11 +167,13 @@ const resolvers = {
         description,
         priority,
         taskName,
+        tagId,
         jwt: jwtfromuser,
       }: {
         id: string;
         description: string;
         priority: number;
+        tagId: string;
         taskName: string;
         jwt: string;
       }
@@ -203,6 +205,7 @@ const resolvers = {
             ...(description ? { description } : {}),
             priority,
             ...(taskName ? { taskName } : {}),
+            tagId,
           },
           include: { user: true, tag: true },
         });
