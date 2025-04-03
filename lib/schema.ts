@@ -15,6 +15,17 @@ type Todo {
     user: UserNoPass!
     tag: Tag!
 }
+type Guest {
+    id: ID!
+    description: String!
+    isDone: Boolean!
+    priority: Int!
+    cancelled: Boolean!
+    taskName: String!
+    createdAt: String!
+    updatedAt: String!
+    tag: Tag!
+}
 type User {
     id: ID!
     username: String!
@@ -42,6 +53,7 @@ type Query {
     tag: myResponse
     todos: myResponse
     users: myResponse
+    guests: [Guest]!
 }
 type Mutation {
     addTodo(description: String!, priority: Int!, taskName: String!, tagId: String!, jwt: String!): myResponse
@@ -53,5 +65,10 @@ type Mutation {
     updateStatus(todoId: String!, jwt: String!): myResponse
     userTodo(jwt: String!): myResponse
     cancelTodo(jwt: String!, id: String!): myResponse
+    addNewGuestTodo(description: String!, priority: Int!, taskName: String!, tagId: String!): Guest!
+    editGuestTodo(id: String!, description: String, priority: Int, taskName: String, tagId: String): Guest!
+    cancelGuestTodo(id:String!): Guest!
+    doneGuestTodo(id:String!): Guest!
+    
 }
 `;

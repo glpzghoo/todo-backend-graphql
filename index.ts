@@ -38,6 +38,14 @@ const resolvers = {
         tags,
       };
     },
+    // guest section
+    guests: async () => {
+      const todos = await prisma.guests.findMany({
+        include: { tag: true },
+        orderBy: [{ createdAt: "desc" }],
+      });
+      return todos;
+    },
   },
   Mutation: {
     newUser: async (
@@ -98,6 +106,12 @@ const resolvers = {
         const user = await prisma.user.findUnique({ where: { id: verify.id } });
         if (!user) {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
+        }
+        const todoexists = await prisma.todo.findFirst({
+          where: { taskName, isDone: false, cancelled: false },
+        });
+        if (todoexists) {
+          throw new GraphQLError("Даалгавар аль хэдийн үүссэн байна!");
         }
         const newTodo = await prisma.todo.create({
           data: {
@@ -368,6 +382,95 @@ const resolvers = {
         };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
+      }
+    },
+    // guest muttions
+    addNewGuestTodo: async (
+      p: any,
+      {
+        description,
+        priority,
+        taskName,
+        tagId,
+      }: {
+        description: string;
+        priority: number;
+        taskName: string;
+        tagId: string;
+      }
+    ) => {
+      try {
+        const todoNameExists = await prisma.guests.findFirst({
+          where: { taskName, isDone: false, cancelled: false },
+        });
+        if (todoNameExists) {
+          throw new GraphQLError("Даалгавар аль хэдийн үүссэн байна!");
+        }
+        const newTodo = await prisma.guests.create({
+          data: {
+            description,
+            priority,
+            tagId,
+            taskName,
+          },
+          include: { tag: true },
+        });
+        return newTodo;
+      } catch (err) {
+        throw new GraphQLError("Шинэ todo үүсгэхэд алдаа гарлаа!");
+      }
+    },
+    editGuestTodo: async (
+      p: any,
+      {
+        description,
+        taskName,
+        priority,
+        id,
+        tagId,
+      }: {
+        description: string;
+        taskName: string;
+        priority: number;
+        id: string;
+        tagId: string;
+      }
+    ) => {
+      try {
+        const updateTodo = await prisma.guests.update({
+          where: { id },
+          data: {
+            ...(description ? { description } : {}),
+            ...(taskName ? { taskName } : {}),
+            priority,
+            tagId,
+          },
+        });
+        return updateTodo;
+      } catch (err) {
+        throw new GraphQLError("Засахад алдаа гарлаа!");
+      }
+    },
+    cancelGuestTodo: async (p: any, { id }: { id: string }) => {
+      try {
+        const cancalTodo = await prisma.guests.update({
+          where: { id },
+          data: { cancelled: true },
+        });
+        return cancalTodo;
+      } catch (err) {
+        throw new GraphQLError("Цуцлахад алдаа гарлаа");
+      }
+    },
+    doneGuestTodo: async (p: any, { id }: { id: string }) => {
+      try {
+        const doneTodo = await prisma.guests.update({
+          where: { id },
+          data: { isDone: true },
+        });
+        return doneTodo;
+      } catch (err) {
+        throw new GraphQLError("Өөрчлөхөд алдаа гарлаа");
       }
     },
   },
