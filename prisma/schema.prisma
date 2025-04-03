@@ -22,7 +22,7 @@ model todo {
   isDone      Boolean  @default(false)
   priority    Int
   cancelled Boolean @default(false)
-  taskName    String   @unique
+  taskName    String  
   userId      String
   tagId       String
   tag         tag      @relation(fields: [tagId], references: [id])

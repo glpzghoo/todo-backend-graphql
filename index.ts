@@ -108,7 +108,9 @@ const resolvers = {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
         }
         const todoexists = await prisma.todo.findFirst({
-          where: { taskName, isDone: false, cancelled: false },
+          where: {
+            AND: [{ taskName }, { cancelled: false }, { isDone: false }],
+          },
         });
         if (todoexists) {
           throw new GraphQLError("Даалгавар аль хэдийн үүссэн байна!");
@@ -401,7 +403,9 @@ const resolvers = {
     ) => {
       try {
         const todoNameExists = await prisma.guests.findFirst({
-          where: { taskName, isDone: false, cancelled: false },
+          where: {
+            AND: [{ taskName }, { isDone: false }, { cancelled: false }],
+          },
         });
         if (todoNameExists) {
           throw new GraphQLError("Даалгавар аль хэдийн үүссэн байна!");
