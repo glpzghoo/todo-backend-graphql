@@ -165,8 +165,7 @@ const resolvers = {
           id: user.id,
           username: user.username,
         },
-        process.env.ACCESS_TOKEN,
-        { expiresIn: "1h" }
+        process.env.ACCESS_TOKEN
       );
       return {
         success: true,
