@@ -5,7 +5,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { typeDefs } from "./lib/schema";
 import { prisma } from "./lib/prisma";
-
+// import { configDotenv } from "dotenv";
+// configDotenv();
+console.log(process.env.ACCESS_TOKEN);
+console.log(process.env.REFRESH_TOKEN);
+console.log(process.env.DATABASE_URL);
+console.log(process.env.NODE_ENV);
 const resolvers = {
   Query: {
     users: async () => {
@@ -479,7 +484,11 @@ const resolvers = {
   },
 };
 const startServer = async () => {
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    introspection: process.env.NODE_ENV !== "prod",
+  });
   const { url } = await startStandaloneServer(server, {
     listen: { port: 4000 },
   });
