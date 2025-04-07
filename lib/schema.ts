@@ -56,12 +56,11 @@ type Query {
     guests: [Guest]!
 }
 type Mutation {
-    addTodo(description: String!, priority: Int!, taskName: String!, tagId: String!, jwt: String!): myResponse
     newUser(username: String!, password: String!): myResponse
     addTag(name: String!): myResponse
     loginUser(username: String!, password: String!): myResponse
+    addTodo(description: String!, priority: Int!, taskName: String!, tagId: String!, jwt: String!): myResponse
     updateTodo(id: String!, description: String, priority: Int, taskName: String, jwt: String!, tagId: String): myResponse
-    userDoneTodo(jwt: String!): myResponse
     updateStatus(todoId: String!, jwt: String!): myResponse
     userTodo(jwt: String!): myResponse
     cancelTodo(jwt: String!, id: String!): myResponse
@@ -69,6 +68,5 @@ type Mutation {
     editGuestTodo(id: String!, description: String, priority: Int, taskName: String, tagId: String): Guest!
     cancelGuestTodo(id:String!): Guest!
     doneGuestTodo(id:String!): Guest!
-    
 }
 `;

@@ -6,15 +6,12 @@ import jwt from "jsonwebtoken";
 import { typeDefs } from "./lib/schema";
 import { prisma } from "./lib/prisma";
 import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 dotenv.config();
-console.log(process.env.ACCESS_TOKEN);
-console.log(process.env.REFRESH_TOKEN);
-console.log(process.env.DATABASE_URL);
-console.log(process.env.NODE_ENV);
-const resolvers = {
+export const resolvers = {
   Query: {
-    users: async () => {
-      const users = await prisma.user.findMany({
+    users: async (p: any, {}, context?: { prisma: PrismaClient }) => {
+      const users = await context?.prisma.user.findMany({
         include: { todo: true },
         omit: { password: true },
       });
@@ -34,8 +31,8 @@ const resolvers = {
         todos,
       };
     },
-    tag: async () => {
-      const tags = await prisma.tag.findMany();
+    tag: async (p: any, {}, context?: { prisma: PrismaClient }) => {
+      const tags = await context?.prisma.tag.findMany();
       return {
         success: true,
         message: "Хүсэлт амжилттай!",
@@ -234,37 +231,6 @@ const resolvers = {
           message: "Хүсэлт амжилттай!",
           code: "REQUEST_SUCCESS",
           todo: updatedTodo,
-        };
-      } catch (err) {
-        throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
-      }
-    },
-    userDoneTodo: async (p: any, { jwt: jwtfromuser }: { jwt: string }) => {
-      if (!process.env.ACCESS_TOKEN) {
-        throw new GraphQLError(
-          "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-        );
-      }
-      try {
-        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
-          id: string;
-          username: string;
-        };
-        const user = await prisma.user.findUnique({
-          where: { id: verify.id },
-        });
-        if (!user) {
-          throw new GraphQLError("Хэрэглэгч олдсонгүй!");
-        }
-        const todos = await prisma.todo.findMany({
-          where: { userId: verify.id, isDone: true },
-          include: { user: true, tag: true },
-        });
-        return {
-          success: true,
-          message: "Хүсэлт амжилттай!",
-          code: "REQUEST_SUCCESS",
-          todos,
         };
       } catch (err) {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
@@ -487,10 +453,11 @@ const startServer = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+
     introspection: process.env.NODE_ENV !== "production",
   });
   const { url } = await startStandaloneServer(server, {
-    listen: { port: 4000 },
+    context: async () => ({ prisma }),
   });
 
   console.log("Сервер аслаа.", url);
