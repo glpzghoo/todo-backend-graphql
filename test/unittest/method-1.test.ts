@@ -18,6 +18,7 @@ describe("unit test going hard", () => {
       expect(response.users[0].username).toBe("tested");
     }
   });
+  // --
   it("query - tag", async () => {
     const mockedPrisma = {
       prisma: {
@@ -35,13 +36,38 @@ describe("unit test going hard", () => {
       expect(response.tags[0].name).toBe("tested");
     }
   });
+  // --
   it("query - todos", async () => {
-    const response = await resolvers.Query.todos();
+    const mockedPrisma = {
+      prisma: {
+        todo: {
+          findMany: jest
+            .fn()
+            .mockResolvedValue([{ id: "test", taskName: "test taskName" }]),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Query.todos({}, {}, mockedPrisma);
     expect(response.success).toBeTruthy();
+    if (response.todos) {
+      expect(response.todos[0].taskName).toBe("test taskName");
+    }
   });
   it("query - guests", async () => {
-    const response = await resolvers.Query.guests();
-    expect(response[0].taskName).toBeDefined();
+    const mockedPrisma = {
+      prisma: {
+        guests: {
+          findMany: jest
+            .fn()
+            .mockResolvedValue([{ taskName: "tested", id: "tested" }]),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Query.guests({}, {}, mockedPrisma);
+    expect(response).toBeDefined();
+    if (response) {
+      expect(response[0].taskName).toBe("tested");
+    }
   });
   it("mutation - addNewGuestTodo + addTag", async () => {
     const response = await resolvers.Mutation.addTag(

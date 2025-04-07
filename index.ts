@@ -22,8 +22,10 @@ export const resolvers = {
         users,
       };
     },
-    todos: async () => {
-      const todos = await prisma.todo.findMany({ include: { user: true } });
+    todos: async (p: any, {}, context?: { prisma: PrismaClient }) => {
+      const todos = await context?.prisma.todo.findMany({
+        include: { user: true },
+      });
       return {
         success: true,
         message: "Хүсэлт амжилттай!",
@@ -41,8 +43,8 @@ export const resolvers = {
       };
     },
     // guest section
-    guests: async () => {
-      const todos = await prisma.guests.findMany({
+    guests: async (p: any, {}, context?: { prisma: PrismaClient }) => {
+      const todos = await context?.prisma.guests.findMany({
         include: { tag: true },
         orderBy: [{ createdAt: "desc" }],
       });
