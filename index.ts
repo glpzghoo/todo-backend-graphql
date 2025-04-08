@@ -470,4 +470,6 @@ const startServer = async () => {
 
   console.log("Сервер аслаа.", url);
 };
-startServer();
+if (process.env.NODE_ENV !== "test") {
+  startServer();
+}

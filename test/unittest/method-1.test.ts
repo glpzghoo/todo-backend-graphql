@@ -15,7 +15,7 @@ jest.mock("bcrypt", () => ({
   hash: jest.fn().mockResolvedValue("fakeCriptoPass"),
 }));
 afterAll(() => {
-  jest.clearAllTimers;
+  jest.clearAllTimers();
 });
 describe("unit test going hard", () => {
   it("query - users", async () => {
@@ -151,7 +151,6 @@ describe("unit test going hard", () => {
       fakeUser,
       mockedPrisma
     );
-    // console.log(response);
     expect(response.success).toBeTruthy();
     expect(response.JWT).toBe(fakejwt);
     if (response.user) {
@@ -262,7 +261,6 @@ describe("unit test going hard", () => {
       { todoId: fakeTodo.id, jwt: fakejwt },
       mockedPrisma
     );
-    // console.log({ response });
     expect(response.success).toBeTruthy();
     if (response.todo) {
       expect(response.todo.isDone).toBeTruthy();
@@ -350,7 +348,6 @@ describe("unit test going hard", () => {
       { id: fakeTodo.id, jwt: fakejwt },
       mockedPrisma
     );
-    // console.log(response);
     expect(response.success).toBeTruthy();
     if (response.todo) {
       expect(response.todo.cancelled).toBeTruthy();
@@ -380,7 +377,6 @@ describe("unit test going hard", () => {
       fakeTodo,
       mockedPrisma
     );
-    console.log(response);
     expect(response).toBeDefined();
     if (response) {
       expect(response.description).toBe(fakeTodo.description);
@@ -419,7 +415,6 @@ describe("unit test going hard", () => {
       fakeTodo,
       mockedPrisma
     );
-    // console.log(response);
     expect(response).toBeDefined();
     if (response) {
       expect(response.description).toBe(updateTodo.description);
@@ -460,7 +455,7 @@ describe("unit test going hard", () => {
       expect(response.isDone).toBeFalsy();
     }
   });
-  it("zochnii false utgatai isDone true boloh ystoi", async () => {
+  test("zochnii false utgatai isDone true boloh ystoi", async () => {
     const fakeTodo = {
       id: `fakeid`,
       description: "testing desc",
@@ -488,6 +483,5 @@ describe("unit test going hard", () => {
     if (response) {
       expect(response.isDone).toBeTruthy();
     }
-    return;
   });
 });
