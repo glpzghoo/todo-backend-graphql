@@ -1,6 +1,15 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { resolvers } from "../..";
+import jwt from "jsonwebtoken";
+jest.mock("jsonwebtoken", () => ({
+  sign: jest.fn().mockReturnValue("fakeJWT"),
+}));
+jest.mock("bcrypt", () => ({
+  compare: jest.fn().mockResolvedValue(true),
+  hash: jest.fn().mockResolvedValue("fakeCriptoPass"),
+}));
 describe("unit test going hard", () => {
+  let fakejwt: string = "fakeJWT";
   it("query - users", async () => {
     const mockedPrisma = {
       prisma: {
@@ -69,22 +78,76 @@ describe("unit test going hard", () => {
       expect(response[0].taskName).toBe("tested");
     }
   });
-  it("mutation - addNewGuestTodo + addTag", async () => {
-    const response = await resolvers.Mutation.addTag(
+  it("mutation - newUser", async () => {
+    const mockuser = {
+      username: `testing new user ${Math.floor(Math.random() * 50000)}`,
+      password: `passwordmagic`,
+    };
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(null),
+          create: jest.fn().mockResolvedValue({
+            username: mockuser.username,
+            password: "fakeCriptoPass",
+          }),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.newUser(
       {},
-      { name: `test tag ${Math.floor(Math.random() * 50000)}` }
+      { username: mockuser.username, password: mockuser.password },
+      mockedPrisma
     );
     expect(response.success).toBeTruthy();
-    const response2 = await resolvers.Mutation.addNewGuestTodo(
+    if (response.user) {
+      expect(response.user.username).toBe(mockuser.username);
+      expect(response.user.password).toBe("fakeCriptoPass");
+    }
+  });
+  it("mutation - addTag", async () => {
+    const mocktag = { id: "tested", name: "tested" };
+    const mockedPrisma = {
+      prisma: {
+        tag: {
+          create: jest.fn().mockResolvedValue(mocktag),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+
+    const response = await resolvers.Mutation.addTag({}, mocktag, mockedPrisma);
+    expect(response.success).toBeTruthy();
+    expect(response.tag).toBeDefined();
+    if (response.tag) {
+      expect(response.tag.id).toBe(mocktag.id);
+      expect(response.tag.name).toBe(mocktag.name);
+    }
+  });
+  it("login user", async () => {
+    // const jwt = {
+    //   sign: jest.fn().mockResolvedValue("fakeJWT"),
+    // };
+    const fakeUser = {
+      username: "glpzghoo",
+      password: "passwordmagic",
+    };
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(fakeUser),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.loginUser(
       {},
-      {
-        description: "Test task desc",
-        priority: 4,
-        taskName: `test task ${Math.floor(Math.random() * 50000)}`,
-        tagId: response.tag.id,
-      }
+      fakeUser,
+      mockedPrisma
     );
-    expect(response2.taskName).toBeDefined();
-    expect(response2.description).toBe("Test task desc");
+    console.log(response);
+    expect(response.success).toBeTruthy();
+    expect(response.JWT).toBe("fakeJWT");
+    if (response.user) {
+      expect(response.user.username).toBe(fakeUser.username);
+    }
   });
 });

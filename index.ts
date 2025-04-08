@@ -54,14 +54,17 @@ export const resolvers = {
   Mutation: {
     newUser: async (
       p: any,
-      { username, password }: { username: string; password: string }
+      { username, password }: { username: string; password: string },
+      context: { prisma: PrismaClient }
     ) => {
-      const useExist = await prisma.user.findUnique({ where: { username } });
+      const useExist = await context.prisma.user.findUnique({
+        where: { username },
+      });
       if (useExist) {
         throw new GraphQLError("Хэрэглэгч бүртгэлтэй байна!");
       }
       const encryptedPass = await bcrypt.hash(password, 15);
-      const newUser = await prisma.user.create({
+      const newUser = await context.prisma.user.create({
         data: { username, password: encryptedPass },
       });
       return {
@@ -71,8 +74,12 @@ export const resolvers = {
         user: newUser,
       };
     },
-    addTag: async (p: any, { name }: { name: string }) => {
-      const newTag = await prisma.tag.create({ data: { name } });
+    addTag: async (
+      p: any,
+      { name }: { name: string },
+      context?: { prisma: PrismaClient }
+    ) => {
+      const newTag = await context?.prisma.tag.create({ data: { name } });
       return {
         success: true,
         message: "Хүсэлт амжилттай!",
@@ -145,14 +152,10 @@ export const resolvers = {
     },
     loginUser: async (
       p: any,
-      { username, password }: { username: string; password: string }
+      { username, password }: { username: string; password: string },
+      context?: { prisma: PrismaClient }
     ) => {
-      if (!process.env.ACCESS_TOKEN) {
-        throw new GraphQLError(
-          "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-        );
-      }
-      const user = await prisma.user.findUnique({
+      const user = await context?.prisma.user.findUnique({
         where: { username },
         include: { todo: { include: { tag: true } } },
       });
@@ -169,7 +172,7 @@ export const resolvers = {
           id: user.id,
           username: user.username,
         },
-        process.env.ACCESS_TOKEN
+        process.env.ACCESS_TOKEN!
       );
       return {
         success: true,
