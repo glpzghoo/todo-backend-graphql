@@ -1,15 +1,20 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { resolvers } from "../..";
-import jwt from "jsonwebtoken";
+const fakeUser = {
+  id: `tested`,
+  username: `glpzghoo`,
+  password: `passwordmagic`,
+};
+const fakejwt: string = "fakeJWT";
 jest.mock("jsonwebtoken", () => ({
   sign: jest.fn().mockReturnValue("fakeJWT"),
+  verify: jest.fn().mockReturnValue({ id: `tested`, username: `glpzghoo` }),
 }));
 jest.mock("bcrypt", () => ({
   compare: jest.fn().mockResolvedValue(true),
   hash: jest.fn().mockResolvedValue("fakeCriptoPass"),
 }));
 describe("unit test going hard", () => {
-  let fakejwt: string = "fakeJWT";
   it("query - users", async () => {
     const mockedPrisma = {
       prisma: {
@@ -143,11 +148,342 @@ describe("unit test going hard", () => {
       fakeUser,
       mockedPrisma
     );
-    console.log(response);
+    // console.log(response);
     expect(response.success).toBeTruthy();
-    expect(response.JWT).toBe("fakeJWT");
+    expect(response.JWT).toBe(fakejwt);
     if (response.user) {
       expect(response.user.username).toBe(fakeUser.username);
+    }
+  });
+  it("add todo", async () => {
+    const fakeTodo = {
+      description: "testing desc",
+      priority: 10,
+      taskName: "testing taskName",
+      tagId: `tested`,
+    };
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue({
+            username: fakeUser.username,
+            password: fakeUser.password,
+          }),
+        },
+        todo: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: jest.fn().mockResolvedValue(fakeTodo),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.addTodo(
+      {},
+      { ...fakeTodo, jwt: fakejwt },
+      mockedPrisma
+    );
+    expect(response.success).toBeTruthy();
+    if (response.todo) {
+      expect(response.todo.description).toBe(fakeTodo.description);
+      expect(response.todo.priority).toBe(fakeTodo.priority);
+      expect(response.todo.taskName).toBe(fakeTodo.taskName);
+      expect(response.todo.tagId).toBe(fakeTodo.tagId);
+    }
+  });
+  it("update todo", async () => {
+    const fakeTodo = {
+      id: `faketodoid`,
+      description: "testing desc",
+      priority: 5,
+      taskName: "testing taskName",
+      tagId: `tested`,
+      jwt: fakejwt,
+    };
+    const updatedTodo = {
+      description: "testing desc updated",
+      priority: 5,
+      taskName: "testing taskName update",
+      tagId: `tested updated`,
+      jwt: fakejwt,
+      id: `faketodoid test update`,
+    };
+
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(fakeUser),
+        },
+        todo: {
+          findUnique: jest.fn().mockResolvedValue(fakeTodo),
+          update: jest.fn().mockResolvedValue(updatedTodo),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.updateTodo(
+      {},
+      fakeTodo,
+      mockedPrisma
+    );
+    expect(response.success).toBeTruthy();
+    if (response.todo) {
+      expect(response.todo.description).toBe(updatedTodo.description);
+      expect(response.todo.id).toBe(updatedTodo.id);
+      expect(response.todo.priority).toBe(updatedTodo.priority);
+      expect(response.todo.taskName).toBe(updatedTodo.taskName);
+      expect(response.todo.tagId).toBe(updatedTodo.tagId);
+    }
+  });
+  it("update status - false valuetai isDone true boloh ystoi", async () => {
+    const fakeTodo = {
+      id: `faketodoid`,
+      description: "testing desc",
+      priority: 5,
+      isDone: false,
+      userId: `tested`,
+      taskName: "testing taskName",
+      tagId: `tested`,
+      jwt: fakejwt,
+    };
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(fakeUser),
+        },
+        todo: {
+          findUnique: jest.fn().mockResolvedValue(fakeTodo),
+          update: jest.fn().mockResolvedValue({ ...fakeTodo, isDone: true }),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.updateStatus(
+      {},
+      { todoId: fakeTodo.id, jwt: fakejwt },
+      mockedPrisma
+    );
+    // console.log({ response });
+    expect(response.success).toBeTruthy();
+    if (response.todo) {
+      expect(response.todo.isDone).toBeTruthy();
+    }
+  });
+  it("userTodo", async () => {
+    const fakeTodos = [
+      {
+        id: `faketodoid 1`,
+        description: "testing desc",
+        priority: 5,
+        isDone: false,
+        userId: `tested`,
+        taskName: "testing taskName",
+        tagId: `tested`,
+        jwt: fakejwt,
+      },
+      {
+        id: `faketodoid 2`,
+        description: "testing desc",
+        priority: 5,
+        isDone: false,
+        userId: `tested`,
+        taskName: "testing taskName",
+        tagId: `tested`,
+        jwt: fakejwt,
+      },
+      {
+        id: `faketodoid 3`,
+        description: "testing desc",
+        priority: 5,
+        isDone: false,
+        userId: `tested`,
+        taskName: "testing taskName",
+        tagId: `tested`,
+        jwt: fakejwt,
+      },
+    ];
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(fakeUser),
+        },
+        todo: {
+          findMany: jest.fn().mockResolvedValue(fakeTodos),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.userTodo(
+      {},
+      { jwt: fakejwt },
+      mockedPrisma
+    );
+    expect(response.success).toBeTruthy();
+    if (response.todos && response.user) {
+      expect(response.todos[0].id).toBe(fakeTodos[0].id);
+      expect(response.todos[1].id).toBe(fakeTodos[1].id);
+      expect(response.todos[2].id).toBe(fakeTodos[2].id);
+      expect(response.user.username).toBe(fakeUser.username);
+    }
+  });
+  it("cancel todo - false valuetai cancelled true boloh ystoi", async () => {
+    const fakeTodo = {
+      id: `fakeid`,
+      description: "testing desc",
+      priority: 4,
+      userId: `tested`,
+      taskName: "testing taskName",
+      tagId: `tested`,
+      cancelled: false,
+    };
+    const mockedPrisma = {
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(fakeUser),
+        },
+        todo: {
+          findUnique: jest.fn().mockResolvedValue(fakeTodo),
+          update: jest.fn().mockResolvedValue({ ...fakeTodo, cancelled: true }),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.cancelTodo(
+      {},
+      { id: fakeTodo.id, jwt: fakejwt },
+      mockedPrisma
+    );
+    // console.log(response);
+    expect(response.success).toBeTruthy();
+    if (response.todo) {
+      expect(response.todo.cancelled).toBeTruthy();
+      expect(response.todo.id).toBe(fakeTodo.id);
+      expect(response.todo.description).toBe(fakeTodo.description);
+      expect(response.todo.taskName).toBe(fakeTodo.taskName);
+      expect(response.todo.priority).toBe(fakeTodo.priority);
+    }
+  });
+  it("zochnii todo nemeh", async () => {
+    const fakeTodo = {
+      description: "testing desc",
+      priority: 4,
+      taskName: "testing taskName",
+      tagId: `tested`,
+    };
+    const mockedPrisma = {
+      prisma: {
+        guests: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: jest.fn().mockResolvedValue(fakeTodo),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.addNewGuestTodo(
+      {},
+      fakeTodo,
+      mockedPrisma
+    );
+    console.log(response);
+    expect(response).toBeDefined();
+    if (response) {
+      expect(response.description).toBe(fakeTodo.description);
+      expect(response.priority).toBe(fakeTodo.priority);
+      expect(response.taskName).toBe(fakeTodo.taskName);
+    }
+  });
+  it("zochnii todo zasah", async () => {
+    const fakeTodo = {
+      id: `fakeid`,
+      description: "testing desc",
+      priority: 4,
+      taskName: "testing taskName",
+      tagId: `tested`,
+      cancelled: false,
+      isDone: false,
+    };
+    const updateTodo = {
+      id: `fakeid`,
+      description: "testing desc upadte",
+      priority: 3,
+      taskName: "testing taskName update",
+      tagId: `tested`,
+      cancelled: false,
+      isDone: false,
+    };
+    const mockedPrisma = {
+      prisma: {
+        guests: {
+          update: jest.fn().mockResolvedValue(updateTodo),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.editGuestTodo(
+      {},
+      fakeTodo,
+      mockedPrisma
+    );
+    // console.log(response);
+    expect(response).toBeDefined();
+    if (response) {
+      expect(response.description).toBe(updateTodo.description);
+      expect(response.taskName).toBe(updateTodo.taskName);
+      expect(response.priority).toBe(updateTodo.priority);
+    }
+  });
+  it("zochnii false utgatai cancelled true boloh ystoi", async () => {
+    const fakeTodo = {
+      id: `fakeid`,
+      description: "testing desc",
+      priority: 4,
+      taskName: "testing taskName",
+      tagId: `tested`,
+      cancelled: false,
+      isDone: false,
+    };
+    const mockedPrisma = {
+      prisma: {
+        guests: {
+          update: jest.fn().mockResolvedValue({ ...fakeTodo, cancelled: true }),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.cancelGuestTodo(
+      {},
+      { id: fakeTodo.id },
+      mockedPrisma
+    );
+    expect(response).toBeDefined();
+    if (response) {
+      expect(response.id).toBe(fakeTodo.id);
+      expect(response.description).toBe(fakeTodo.description);
+      expect(response.priority).toBe(fakeTodo.priority);
+      expect(response.taskName).toBe(fakeTodo.taskName);
+      expect(response.tagId).toBe(fakeTodo.tagId);
+      expect(response.cancelled).toBeTruthy();
+      expect(response.isDone).toBeFalsy();
+    }
+  });
+  it("zochnii false utgatai isDone true boloh ystoi", async () => {
+    const fakeTodo = {
+      id: `fakeid`,
+      description: "testing desc",
+      priority: 4,
+      taskName: "testing taskName",
+      tagId: `tested`,
+      cancelled: false,
+      isDone: false,
+    };
+
+    const mockedPrisma = {
+      prisma: {
+        guests: {
+          update: jest.fn().mockResolvedValue({ ...fakeTodo, isDone: true }),
+        },
+      },
+    } as unknown as { prisma: PrismaClient };
+    const response = await resolvers.Mutation.doneGuestTodo(
+      {},
+      { id: fakeTodo.id },
+      mockedPrisma
+    );
+
+    expect(response).toBeDefined();
+    if (response) {
+      expect(response.isDone).toBeTruthy();
     }
   });
 });

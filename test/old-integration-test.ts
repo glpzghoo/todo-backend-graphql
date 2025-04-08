@@ -71,7 +71,6 @@ describe("integ test goes brr", () => {
       query: ADD_GUEST_TODO,
       variables,
     });
-    console.log({ response: response.body });
     expect(response.body.kind).toBe("single");
     if (response.body.kind === "single") {
       const data = response.body.singleResult.data;

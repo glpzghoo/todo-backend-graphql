@@ -101,24 +101,22 @@ export const resolvers = {
         taskName: string;
         tagId: string;
         jwt: string;
-      }
+      },
+      context?: { prisma: PrismaClient }
     ) => {
       try {
-        if (!process.env.ACCESS_TOKEN) {
-          throw new GraphQLError(
-            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-          );
-        }
-        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN!) as {
           id: string;
           username: string;
         };
 
-        const user = await prisma.user.findUnique({ where: { id: verify.id } });
+        const user = await context?.prisma.user.findUnique({
+          where: { id: verify.id },
+        });
         if (!user) {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
         }
-        const todoexists = await prisma.todo.findFirst({
+        const todoexists = await context?.prisma.todo.findFirst({
           where: {
             AND: [{ taskName }, { cancelled: false }, { isDone: false }],
           },
@@ -126,7 +124,7 @@ export const resolvers = {
         if (todoexists) {
           throw new GraphQLError("Даалгавар аль хэдийн үүссэн байна!");
         }
-        const newTodo = await prisma.todo.create({
+        const newTodo = await context?.prisma.todo.create({
           data: {
             description,
             priority,
@@ -198,30 +196,26 @@ export const resolvers = {
         tagId: string;
         taskName: string;
         jwt: string;
-      }
+      },
+      context?: { prisma: PrismaClient }
     ) => {
       try {
-        if (!process.env.ACCESS_TOKEN) {
-          throw new GraphQLError(
-            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-          );
-        }
-        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN!) as {
           id: string;
           username: string;
         };
-        const user = await prisma.user.findUnique({
+        const user = await context?.prisma.user.findUnique({
           where: { id: verify.id },
         });
 
         if (!user) {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
         }
-        const todo = await prisma.todo.findUnique({ where: { id } });
+        const todo = await context?.prisma.todo.findUnique({ where: { id } });
         if (!todo) {
           throw new GraphQLError("Todo олдсонгүй!");
         }
-        const updatedTodo = await prisma.todo.update({
+        const updatedTodo = await context?.prisma.todo.update({
           where: { id: todo.id },
           data: {
             ...(description ? { description } : {}),
@@ -243,25 +237,25 @@ export const resolvers = {
     },
     updateStatus: async (
       p: any,
-      { todoId, jwt: jwtfromuser }: { todoId: string; jwt: string }
+      { todoId, jwt: jwtfromuser }: { todoId: string; jwt: string },
+      context?: { prisma: PrismaClient }
     ) => {
       try {
-        if (!process.env.ACCESS_TOKEN) {
-          throw new GraphQLError(
-            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-          );
-        }
-        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN!) as {
           id: string;
           username: string;
         };
 
-        const user = await prisma.user.findUnique({ where: { id: verify.id } });
+        const user = await context?.prisma.user.findUnique({
+          where: { id: verify.id },
+        });
         if (!user) {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
         }
 
-        const todo = await prisma.todo.findUnique({ where: { id: todoId } });
+        const todo = await context?.prisma.todo.findUnique({
+          where: { id: todoId },
+        });
         if (!todo) {
           throw new GraphQLError("Даалгавар олдсонгүй!");
         }
@@ -273,7 +267,7 @@ export const resolvers = {
           throw new GraphQLError("Даалгавар өөрчлөх эрх байхгүй!");
         }
 
-        const updatedTodo = await prisma.todo.update({
+        const updatedTodo = await context?.prisma.todo.update({
           where: { id: todo.id },
           data: { isDone: true },
           include: { user: true, tag: true },
@@ -288,23 +282,24 @@ export const resolvers = {
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
       }
     },
-    userTodo: async (p: any, { jwt: jwtfromuser }: { jwt: string }) => {
+    userTodo: async (
+      p: any,
+      { jwt: jwtfromuser }: { jwt: string },
+      context?: { prisma: PrismaClient }
+    ) => {
       try {
-        if (!process.env.ACCESS_TOKEN) {
-          throw new GraphQLError(
-            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-          );
-        }
-        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN!) as {
           id: string;
           username: string;
         };
 
-        const user = await prisma.user.findUnique({ where: { id: verify.id } });
+        const user = await context?.prisma.user.findUnique({
+          where: { id: verify.id },
+        });
         if (!user) {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
         }
-        const todos = await prisma.todo.findMany({
+        const todos = await context?.prisma.todo.findMany({
           where: { userId: verify.id },
           include: { tag: true, user: true },
           orderBy: [{ isDone: "asc" }, { createdAt: "desc" }],
@@ -322,32 +317,29 @@ export const resolvers = {
     },
     cancelTodo: async (
       p: any,
-      { jwt: jwtfromuser, id }: { jwt: string; id: string }
+      { jwt: jwtfromuser, id }: { jwt: string; id: string },
+      context?: { prisma: PrismaClient }
     ) => {
       try {
-        if (!process.env.ACCESS_TOKEN) {
-          throw new GraphQLError(
-            "Серверийн тохиргоо асуудалтай байгаа бололтой. Дараа оролдоно уу~!"
-          );
-        }
-        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN) as {
+        const verify = jwt.verify(jwtfromuser, process.env.ACCESS_TOKEN!) as {
           id: string;
           username: string;
         };
-
-        const user = await prisma.user.findUnique({ where: { id: verify.id } });
+        const user = await context?.prisma.user.findUnique({
+          where: { id: verify.id },
+        });
         if (!user) {
           throw new GraphQLError("Хэрэглэгч олдсонгүй!");
         }
 
-        const todo = await prisma.todo.findUnique({ where: { id } });
+        const todo = await context?.prisma.todo.findUnique({ where: { id } });
         if (!todo) {
           throw new GraphQLError("Даалгавар олдсонгүй!");
         }
         if (todo.userId !== user.id) {
           throw new GraphQLError("Таны даалгавар биш байна!");
         }
-        const updateTodo = await prisma.todo.update({
+        const updateTodo = await context?.prisma.todo.update({
           where: { id: todo.id },
           data: { cancelled: true },
         });
@@ -358,6 +350,7 @@ export const resolvers = {
           todo: updateTodo,
         };
       } catch (err) {
+        console.log(err);
         throw new GraphQLError("Хүсэлт амжилтгүй боллоо!");
       }
     },
@@ -374,10 +367,11 @@ export const resolvers = {
         priority: number;
         taskName: string;
         tagId: string;
-      }
+      },
+      context?: { prisma: PrismaClient }
     ) => {
       try {
-        const todoNameExists = await prisma.guests.findFirst({
+        const todoNameExists = await context?.prisma.guests.findFirst({
           where: {
             AND: [{ taskName }, { isDone: false }, { cancelled: false }],
           },
@@ -385,7 +379,7 @@ export const resolvers = {
         if (todoNameExists) {
           throw new GraphQLError("Даалгавар аль хэдийн үүссэн байна!");
         }
-        const newTodo = await prisma.guests.create({
+        const newTodo = await context?.prisma.guests.create({
           data: {
             description,
             priority,
@@ -413,10 +407,11 @@ export const resolvers = {
         priority: number;
         id: string;
         tagId: string;
-      }
+      },
+      context?: { prisma: PrismaClient }
     ) => {
       try {
-        const updateTodo = await prisma.guests.update({
+        const updateTodo = await context?.prisma.guests.update({
           where: { id },
           data: {
             ...(description ? { description } : {}),
@@ -430,9 +425,13 @@ export const resolvers = {
         throw new GraphQLError("Засахад алдаа гарлаа!");
       }
     },
-    cancelGuestTodo: async (p: any, { id }: { id: string }) => {
+    cancelGuestTodo: async (
+      p: any,
+      { id }: { id: string },
+      context?: { prisma: PrismaClient }
+    ) => {
       try {
-        const cancalTodo = await prisma.guests.update({
+        const cancalTodo = await context?.prisma.guests.update({
           where: { id },
           data: { cancelled: true },
         });
@@ -441,9 +440,13 @@ export const resolvers = {
         throw new GraphQLError("Цуцлахад алдаа гарлаа");
       }
     },
-    doneGuestTodo: async (p: any, { id }: { id: string }) => {
+    doneGuestTodo: async (
+      p: any,
+      { id }: { id: string },
+      context?: { prisma: PrismaClient }
+    ) => {
       try {
-        const doneTodo = await prisma.guests.update({
+        const doneTodo = await context?.prisma.guests.update({
           where: { id },
           data: { isDone: true },
         });
