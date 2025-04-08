@@ -14,6 +14,9 @@ jest.mock("bcrypt", () => ({
   compare: jest.fn().mockResolvedValue(true),
   hash: jest.fn().mockResolvedValue("fakeCriptoPass"),
 }));
+afterAll(() => {
+  jest.clearAllTimers;
+});
 describe("unit test going hard", () => {
   it("query - users", async () => {
     const mockedPrisma = {
@@ -485,5 +488,6 @@ describe("unit test going hard", () => {
     if (response) {
       expect(response.isDone).toBeTruthy();
     }
+    return;
   });
 });
